@@ -1,0 +1,42 @@
+app:
+  baseUrl: http://localhost:8080
+  verificationThreshold: 24
+  security:
+    jwt:
+      secret: public
+      expiration: 60000
+
+spring:
+  main:
+    banner-mode: "off"
+  jpa:
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: true
+        event:
+          merge:
+            entity_copy_observer: allow
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate:
+      ddl-auto: update
+  datasource:
+    driverClassName: org.mariadb.jdbc.Driver
+    url: 'jdbc:mysql://localhost:3306/chat?useSSL=false'
+    username: root
+    password: ''
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/chat
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: public
+    password: public
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
+    time-zone: UTC
+    mapper:
+      default-view-inclusion: true
+    deserialization:
+      fail-on-unknown-properties: false
