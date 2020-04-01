@@ -19,6 +19,9 @@ enum class LogAction(private val value: String) {
 
     INVALID_REQUEST("invalid.request"),
 
+    LOGIN_REQUEST("login.request"),
+    LOGIN_SUCCESSFUL("login.successful"),
+
     MESSAGE_CREATED("message.created"),
     MESSAGE_SEND_REQUEST("message.send.request"),
     MESSAGE_NOT_FOUND("message.not.found"),
