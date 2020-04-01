@@ -2,16 +2,24 @@ package com.caglayan.api.chat.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.support.ResourceBundleMessageSource
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-
 
 @Configuration
 class BeanConfig(val appConfig: AppConfig) {
 
     @Bean
     fun passwordEncoder() = BCryptPasswordEncoder(12)
+
+    @Bean
+    fun messageSource(): ResourceBundleMessageSource {
+        val source = ResourceBundleMessageSource()
+        source.setBasenames("messages/messages")
+        source.setDefaultEncoding("UTF-8")
+        return source
+    }
 
     @Bean
     fun mailSender(): JavaMailSender {
