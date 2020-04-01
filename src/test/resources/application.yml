@@ -1,6 +1,7 @@
 app:
   baseUrl: http://localhost:8080
   verificationThreshold: 24
+  encryptionPassword: public
   security:
     jwt:
       secret: 4dRjbAxQarcHKLDbn3UVfOMY8ETcwkuk

@@ -224,7 +224,7 @@ class AuthControllerIT {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(gson.toJson(loginBody))
                     .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(MockMvcResultMatchers.status().isForbidden)
+                    .andExpect(MockMvcResultMatchers.status().isUnauthorized)
         }
 
         @Test

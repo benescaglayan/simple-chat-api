@@ -11,6 +11,7 @@ import com.caglayan.api.chat.service.UserDetailsService
 import com.caglayan.api.chat.util.JwtUtil
 import com.google.gson.Gson
 import com.jayway.jsonpath.JsonPath
+import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.AfterEach
@@ -224,7 +225,7 @@ class MessageControllerIT {
     }
 
     @Nested
-    inner class Get {
+    inner class GetSingle {
 
         @Test
         fun givenNoToken_thenReturn403() {
@@ -293,6 +294,186 @@ class MessageControllerIT {
             assertThat(JsonPath.read<Int>(messageResponse, "$.message.id")).isEqualTo(message.id)
             assertThat(JsonPath.read<String>(messageResponse, "$.message.receiver.username")).isEqualTo(receiverUsername)
             assertThat(JsonPath.read<String>(messageResponse, "$.message.text")).isEqualTo(text)
+        }
+
+    }
+
+    @Nested
+    inner class GetFiltered {
+
+        @Test
+        fun givenNoToken_thenReturn403() {
+            mockMvc.perform(MockMvcRequestBuilders.get("/messages/")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isForbidden)
+        }
+
+        @Test
+        fun givenValidTokenAndNonMatchingUsername_thenReturn200WithEmptyList() {
+            val filteringUsername = "message_test_getter"
+            val senderUsername = "message_test_first_sender"
+
+            val filteringUser = User(filteringUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            filteringUser.isConfirmed = true
+            userRepository.save(filteringUser)
+
+            val sender = User(senderUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            sender.isConfirmed = true
+            userRepository.save(sender)
+
+            messageRepository.save(Message("Hello!", sender, filteringUser))
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/messages/?username=randomUsername")
+                    .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(filteringUsername))}")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isArray)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isEmpty)
+        }
+
+        @Test
+        fun givenValidTokenAndNonMatchingDateInterval_thenReturn200WithEmptyList() {
+            val filteringUsername = "message_test_getter"
+            val firstMessageSenderUsername = "message_test_first_sender"
+            val secondMessageReceiverUsername = "message_test_second_receiver"
+
+            val filteringUser = User(filteringUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            filteringUser.isConfirmed = true
+            userRepository.save(filteringUser)
+
+            val firstMessageSender = User(firstMessageSenderUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            firstMessageSender.isConfirmed = true
+            userRepository.save(firstMessageSender)
+
+            messageRepository.save(Message("Hello!", firstMessageSender, filteringUser))
+
+            val secondMessageReceiver = User(secondMessageReceiverUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            secondMessageReceiver.isConfirmed = true
+            userRepository.save(secondMessageReceiver)
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/messages/?from=2014-03-05&to=2015-07-07")
+                    .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(filteringUsername))}")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isArray)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isEmpty)
+        }
+
+        @Test
+        fun givenValidTokenAndMatchingFilter_thenReturn200() {
+            val filteringUsername = "message_test_getter"
+            val firstMessageSenderUsername = "message_test_first_sender"
+            val secondMessageReceiverUsername = "message_test_second_receiver"
+            val firstMessageText = "Hello!"
+            val secondMessageText = "Hey there!"
+
+            val filteringUser = User(filteringUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            filteringUser.isConfirmed = true
+            userRepository.save(filteringUser)
+
+            val firstMessageSender = User(firstMessageSenderUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            firstMessageSender.isConfirmed = true
+            userRepository.save(firstMessageSender)
+            messageRepository.save(Message(firstMessageText, firstMessageSender, filteringUser))
+
+            val secondMessageReceiver = User(secondMessageReceiverUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            secondMessageReceiver.isConfirmed = true
+            userRepository.save(secondMessageReceiver)
+            messageRepository.save(Message(secondMessageText, filteringUser, secondMessageReceiver))
+
+            var filteredMessagesResponse = mockMvc.perform(MockMvcRequestBuilders.get("/messages/?username=$firstMessageSenderUsername&from=2015-03-05&to=2025-07-07")
+                    .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(filteringUsername))}")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isArray)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isNotEmpty)
+                    .andReturn().response.contentAsString
+
+            var filteredMessages = JsonPath.read<JSONArray>(filteredMessagesResponse, "messages")
+            filteredMessages.forEach {
+                assertThat(JsonPath.read<String>(it, "$.sender.username")).isEqualTo(firstMessageSenderUsername)
+                assertThat(JsonPath.read<String>(it, "$.receiver.username")).isEqualTo(filteringUsername)
+                assertThat(JsonPath.read<String?>(it, "$.text")).isEqualTo(firstMessageText)
+            }
+
+            filteredMessagesResponse = mockMvc.perform(MockMvcRequestBuilders.get("/messages/?username=$secondMessageReceiverUsername&from=2015-03-05&to=2025-07-07")
+                    .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(filteringUsername))}")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isArray)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isNotEmpty)
+                    .andReturn().response.contentAsString
+
+            filteredMessages = JsonPath.read<JSONArray>(filteredMessagesResponse, "messages")
+            filteredMessages.forEach {
+                assertThat(JsonPath.read<String>(it, "$.sender.username")).isEqualTo(filteringUsername)
+                assertThat(JsonPath.read<String>(it, "$.receiver.username")).isEqualTo(secondMessageReceiverUsername)
+                assertThat(JsonPath.read<String?>(it, "$.text")).isEqualTo(secondMessageText)
+            }
+        }
+
+    }
+
+    @Nested
+    inner class GetNew {
+
+        @Test
+        fun givenNoToken_thenReturn403() {
+            mockMvc.perform(MockMvcRequestBuilders.get("/messages/new")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isForbidden)
+        }
+
+        @Test
+        fun givenNoNewMessages_thenReturn200WithEmptyList() {
+            val ownerUsername = "message_test_getter"
+
+            val owner = User(ownerUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            owner.isConfirmed = true
+            userRepository.save(owner)
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/messages/new")
+                    .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(ownerUsername))}")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isArray)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isEmpty)
+        }
+
+        @Test
+        fun givenNewMessages_thenReturn200() {
+            val receiverUsername = "message_test_receiver"
+            val senderUsername = "message_test_sender"
+            val messages = listOf("Hello!", "How are you?")
+
+            val receiver = User(receiverUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            receiver.isConfirmed = true
+            userRepository.save(receiver)
+
+            val sender = User(senderUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
+            sender.isConfirmed = true
+            userRepository.save(sender)
+
+            messageRepository.save(Message(messages.first(), sender, receiver))
+            messageRepository.save(Message(messages.last(), sender, receiver))
+
+            val newMessagesResponse = mockMvc.perform(MockMvcRequestBuilders.get("/messages/new")
+                    .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(receiverUsername))}")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isArray)
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isNotEmpty)
+                    .andReturn().response.contentAsString
+
+            val newMessages = JsonPath.read<JSONArray>(newMessagesResponse, "messages")
+
+            assertThat(newMessages.size).isEqualTo(2)
+            newMessages.forEach {
+                assertThat(JsonPath.read<String>(it, "$.sender.username")).isEqualTo(senderUsername)
+                assertThat(JsonPath.read<String>(it, "$.receiver.username")).isEqualTo(receiverUsername)
+                assertThat(JsonPath.read<String?>(it, "$.readAt")).isNotNull()
+                assertTrue(messages.contains(JsonPath.read<String?>(it, "$.text")))
+            }
         }
 
     }
