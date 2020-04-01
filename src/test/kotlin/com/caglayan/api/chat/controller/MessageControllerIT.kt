@@ -312,7 +312,6 @@ class MessageControllerIT {
         fun givenValidTokenAndNonMatchingUsername_thenReturn200WithEmptyList() {
             val filteringUsername = "message_test_getter"
             val senderUsername = "message_test_first_sender"
-//            val secondMessageReceiverUsername = "message_test_second_receiver"
 
             val filteringUser = User(filteringUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
             filteringUser.isConfirmed = true
@@ -323,10 +322,6 @@ class MessageControllerIT {
             userRepository.save(sender)
 
             messageRepository.save(Message("Hello!", sender, filteringUser))
-//
-//            val secondMessageReceiver = User(secondMessageReceiverUsername, "John", "Doe", "message_test_getterr@message.com", passwordEncoder.encode("12345689"))
-//            secondMessageReceiver.isConfirmed = true
-//            userRepository.save(secondMessageReceiver)
 
             mockMvc.perform(MockMvcRequestBuilders.get("/messages/?username=randomUsername")
                     .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(filteringUsername))}")
