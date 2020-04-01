@@ -43,7 +43,7 @@ class MessageServiceImpl(val messageRepository: MessageRepository, val blockServ
 
     override fun get(username: String, messageId: Long): Message {
         val message = messageRepository.findById(messageId).orElseThrow { MessageNotFoundException(owner = username, messageId = messageId) }
-        if (message.isFromBlockedUser || !listOf(message.receiver.username, message.sender.username).contains(username)) {
+        if ((message.isFromBlockedUser && message.receiver.username == username) || !listOf(message.receiver.username, message.sender.username).contains(username)) {
             throw MessageNotFoundException(owner = username, messageId = messageId)
         }
 
@@ -60,7 +60,7 @@ class MessageServiceImpl(val messageRepository: MessageRepository, val blockServ
 
         val predicates = ArrayList<Predicate>()
         predicates.add(cb.or(cb.equal(sender.get<String>("username"), ownerUsername), cb.equal(receiver.get<String>("username"), ownerUsername)))
-        predicates.add(cb.and(cb.equal(root.get<Boolean>("isFromBlockedUser"), false)))
+        predicates.add(cb.or(cb.equal(root.get<Boolean>("isFromBlockedUser"), false), cb.equal(sender.get<String>("username"), ownerUsername)))
 
         if (searchingUsername != null) {
             predicates.add(cb.or(cb.equal(sender.get<String>("username"), searchingUsername), cb.equal(receiver.get<String>("username"), searchingUsername)))
@@ -77,6 +77,11 @@ class MessageServiceImpl(val messageRepository: MessageRepository, val blockServ
         cq.where(*predicates.toTypedArray())
 
         val query: TypedQuery<Message> = entityManager.createQuery(cq)
+
+        query.resultList.filter { it.readAt == null && it.receiver.username == ownerUsername }.forEach {
+            it.readAt = LocalDateTime.now()
+            save(it)
+        }
 
         return query.resultList
     }
