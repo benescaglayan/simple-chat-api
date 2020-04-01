@@ -17,13 +17,8 @@ data class Log(
 ) {
 
     @Id
-    var id: String = Random.uuid()
+    val id: String = Random.uuid()
 
-    private var createdAt: LocalDateTime? = null
-
-    @PrePersist
-    fun prePersist() {
-        createdAt = LocalDateTime.now()
-    }
+    val createdAt = LocalDateTime.now()
 
 }
