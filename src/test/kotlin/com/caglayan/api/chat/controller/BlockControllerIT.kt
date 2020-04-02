@@ -65,7 +65,7 @@ class BlockControllerIT {
 
         @Test
         fun givenEmptyToken_thenReturn403() {
-            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/${Random.string()}")
+            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/random_username")
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.status().isForbidden)
         }
@@ -81,7 +81,7 @@ class BlockControllerIT {
             blocker.isConfirmed = false
             userRepository.save(blocker)
 
-            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/${Random.string()}")
+            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/random_username")
                     .header("Authorization", "Bearer $token")
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.status().isUnauthorized)
@@ -93,7 +93,7 @@ class BlockControllerIT {
             blocker.isConfirmed = true
             userRepository.save(blocker)
 
-            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/${Random.string()}")
+            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/random_username")
                     .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(blocker.username))}")
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.status().isNotFound)
@@ -133,7 +133,7 @@ class BlockControllerIT {
 
         @Test
         fun givenEmptyToken_thenReturn403() {
-            mockMvc.perform(MockMvcRequestBuilders.delete("/blocks/${Random.string()}")
+            mockMvc.perform(MockMvcRequestBuilders.delete("/blocks/random_username")
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.status().isForbidden)
         }
@@ -149,7 +149,7 @@ class BlockControllerIT {
             blocker.isConfirmed = false
             userRepository.save(blocker)
 
-            mockMvc.perform(MockMvcRequestBuilders.delete("/blocks/${Random.string()}")
+            mockMvc.perform(MockMvcRequestBuilders.delete("/blocks/random_username")
                     .header("Authorization", "Bearer $token")
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.status().isUnauthorized)
@@ -161,7 +161,7 @@ class BlockControllerIT {
             blocker.isConfirmed = true
             userRepository.save(blocker)
 
-            mockMvc.perform(MockMvcRequestBuilders.delete("/blocks/${Random.string()}")
+            mockMvc.perform(MockMvcRequestBuilders.delete("/blocks/random_username")
                     .header("Authorization", "Bearer ${jwtUtil.generateJwt(userDetailsService.loadUserByUsername(blocker.username))}")
                     .accept(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.status().isNotFound)

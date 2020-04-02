@@ -1,7 +1,7 @@
 package com.caglayan.api.chat.controller
 
 import com.caglayan.api.chat.entity.User
-import com.caglayan.api.chat.event.model.RegistrationCompletedEvent
+import com.caglayan.api.chat.event.model.VerificationRequestedEvent
 import com.caglayan.api.chat.repository.UserRepository
 import com.caglayan.api.chat.repository.VerificationRepository
 import com.caglayan.api.chat.service.EventBusService
@@ -57,7 +57,7 @@ class AuthControllerIT {
     @MockkBean
     lateinit var mailService: MailService
 
-    val slot = slot<RegistrationCompletedEvent>()
+    val slot = slot<VerificationRequestedEvent>()
 
     private val passwordEncoder = BCryptPasswordEncoder(12)
 

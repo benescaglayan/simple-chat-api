@@ -35,16 +35,21 @@ class MessageServiceImpl(val messageRepository: MessageRepository, val blockServ
             message.isFromBlockedUser = true
         }
 
-        val x = save(message)
+        val messageId = save(message).id
 
-        logService.info(LogAction.MESSAGE_CREATED, mapOf("id" to x.id, "senderId" to message.sender.username, "receiver" to message.receiver.username))
-        return x.id
+        logService.info(LogAction.MESSAGE_CREATED, mapOf("id" to messageId, "senderId" to message.sender.username, "receiver" to message.receiver.username))
+        return messageId
     }
 
     override fun get(username: String, messageId: Long): Message {
         val message = messageRepository.findById(messageId).orElseThrow { MessageNotFoundException(owner = username, messageId = messageId) }
         if ((message.isFromBlockedUser && message.receiver.username == username) || !listOf(message.receiver.username, message.sender.username).contains(username)) {
             throw MessageNotFoundException(owner = username, messageId = messageId)
+        }
+
+        if (message.readAt == null) {
+            message.readAt = Date.now()
+            save(message)
         }
 
         return message
@@ -79,7 +84,7 @@ class MessageServiceImpl(val messageRepository: MessageRepository, val blockServ
         val query: TypedQuery<Message> = entityManager.createQuery(cq)
 
         query.resultList.filter { it.readAt == null && it.receiver.username == ownerUsername }.forEach {
-            it.readAt = LocalDateTime.now()
+            it.readAt = Date.now()
             save(it)
         }
 
@@ -91,7 +96,7 @@ class MessageServiceImpl(val messageRepository: MessageRepository, val blockServ
     override fun getNewMessages(receiverUsername: String): List<Message>? {
         val newMessages = messageRepository.findByReceiverUsernameAndReadAtNullAndIsFromBlockedUserFalse(receiverUsername)
         newMessages.forEach {
-            it.readAt = LocalDateTime.now()
+            it.readAt = Date.now()
             save(it)
         }
 

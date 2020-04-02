@@ -1,7 +1,6 @@
 package com.caglayan.api.chat.config.security
 
 import com.caglayan.api.chat.config.JwtConfig
-import com.caglayan.api.chat.exception.InvalidAuthenticationTokenException
 import com.caglayan.api.chat.exception.UnauthorizedRequestException
 import com.caglayan.api.chat.model.enum.LogAction
 import com.caglayan.api.chat.service.LogService

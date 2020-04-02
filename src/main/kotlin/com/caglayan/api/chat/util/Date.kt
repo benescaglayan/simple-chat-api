@@ -27,5 +27,7 @@ class Date {
             }
         }
 
+        fun now() = LocalDateTime.now()
+
     }
 }

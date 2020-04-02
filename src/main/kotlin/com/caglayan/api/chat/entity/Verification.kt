@@ -1,5 +1,6 @@
 package com.caglayan.api.chat.entity
 
+import com.caglayan.api.chat.util.Date
 import com.caglayan.api.chat.util.Random
 import java.time.LocalDateTime
 import javax.persistence.*
@@ -22,9 +23,9 @@ data class Verification(
     var sentAt: LocalDateTime? = null
 
     @PrePersist
-    private fun prePersist() {
+    private fun onPrePersist() {
         if (sentAt == null) {
-            sentAt = LocalDateTime.now()
+            sentAt = Date.now()
         }
     }
 

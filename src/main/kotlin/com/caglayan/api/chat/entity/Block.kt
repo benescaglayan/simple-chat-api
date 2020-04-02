@@ -1,5 +1,6 @@
 package com.caglayan.api.chat.entity
 
+import com.caglayan.api.chat.util.Date
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -21,8 +22,8 @@ data class Block(
     var blockedAt: LocalDateTime? = null
 
     @PrePersist
-    private fun prePersist() {
-        blockedAt = LocalDateTime.now()
+    private fun onPrePersist() {
+        blockedAt = Date.now()
     }
 
 }
