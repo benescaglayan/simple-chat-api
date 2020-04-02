@@ -10,6 +10,8 @@ enum class LogAction(private val value: String) {
     BLOCK_DELETED("block.deleted"),
     SELF_BLOCK("self.block"),
 
+    DUE_VERIFICATION_JOB("due.verification.job"),
+
     EMAIL_SENT("email.sent"),
 
     EVENT_TRIGGERED("event.triggered"),
@@ -34,10 +36,11 @@ enum class LogAction(private val value: String) {
     USER_CREATED("user.created"),
     USER_NOT_FOUND("user.not.found"),
     USER_CONFIRMED("user.confirmed"),
+    USER_DELETED("user.deleted"),
 
     UNAUTHORIZED_REQUEST("unauthorized.request"),
 
-
+    VERIFICATION_DELETED("verification.deleted"),
     VERIFICATION_GENERATED("verification.generated"),
     VERIFICATION_RESEND_REQUEST("verification.resend.request"),
     VERIFICATION_REQUEST("verification.request"),

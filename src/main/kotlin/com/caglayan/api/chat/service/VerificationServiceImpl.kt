@@ -51,6 +51,12 @@ class VerificationServiceImpl(val appConfig: AppConfig, val verificationReposito
         eventBusService.send(VerificationRequestedEvent(user))
     }
 
+    override fun deleteByUserId(userId: Long) {
+        verificationRepository.deleteByUserId(userId)
+
+        logService.info(LogAction.VERIFICATION_DELETED, mapOf("userId" to userId))
+    }
+
     private fun save(verification: Verification) = verificationRepository.save(verification)
 
     private fun delete(verification: Verification) = verificationRepository.delete(verification)
