@@ -12,4 +12,6 @@ interface VerificationRepository : JpaRepository<Verification, Long> {
 
     fun findByUser(user: User): Verification?
 
+    fun deleteByUserId(userId: Long)
+
 }

@@ -10,4 +10,6 @@ interface VerificationService {
 
     fun resend(email: String)
 
+    fun deleteByUserId(userId: Long)
+
 }
