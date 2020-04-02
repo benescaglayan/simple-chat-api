@@ -72,6 +72,20 @@ class CustomExceptionHandler(val logService: LogService): ExceptionHandlerExcept
         return ResponseEntity(ErrorResponse(ex.message.toString()), HttpStatus.NOT_FOUND)
     }
 
+    @ExceptionHandler(SelfBlockingException::class)
+    fun handleSelfBlocking(ex: SelfBlockingException): ResponseEntity<ErrorResponse> {
+        logService.error(LogAction.SELF_BLOCK, mapOf("username" to ex.username))
+
+        return ResponseEntity(ErrorResponse(ex.message.toString()), HttpStatus.UNPROCESSABLE_ENTITY)
+    }
+
+    @ExceptionHandler(UserAlreadyBlockedException::class)
+    fun handleSelfBlocking(ex: UserAlreadyBlockedException): ResponseEntity<ErrorResponse> {
+        logService.error(LogAction.BLOCK_ALREADY_EXISTS, mapOf("blocker" to ex.blockerUsername, "blocked" to ex.blockedUsername))
+
+        return ResponseEntity(ErrorResponse(ex.message.toString()), HttpStatus.ALREADY_REPORTED)
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
         logService.error(LogAction.INVALID_REQUEST, mapOf("message" to ex.message))
@@ -90,7 +104,9 @@ class CustomExceptionHandler(val logService: LogService): ExceptionHandlerExcept
     fun handleValidationExceptions(ex: MissingKotlinParameterException): ResponseEntity<ErrorResponse> {
         logService.error(LogAction.INVALID_REQUEST, mapOf("message" to ex.message))
 
-        return ResponseEntity(ErrorResponse(ex.message.toString()), HttpStatus.BAD_REQUEST)
+        val missingFieldMessage = "missing field: ".plus(ex.message.toString().substringAfter("\"").substringBefore("\""))
+
+        return ResponseEntity(ErrorResponse(missingFieldMessage), HttpStatus.BAD_REQUEST)
     }
 
 

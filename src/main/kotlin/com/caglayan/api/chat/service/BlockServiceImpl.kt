@@ -3,6 +3,8 @@ package com.caglayan.api.chat.service
 import com.caglayan.api.chat.entity.Block
 import com.caglayan.api.chat.entity.User
 import com.caglayan.api.chat.exception.BlockNotFoundException
+import com.caglayan.api.chat.exception.SelfBlockingException
+import com.caglayan.api.chat.exception.UserAlreadyBlockedException
 import com.caglayan.api.chat.exception.UserNotFoundException
 import com.caglayan.api.chat.model.enum.LogAction
 import com.caglayan.api.chat.repository.BlockRepository
@@ -14,12 +16,19 @@ class BlockServiceImpl(val blockRepository: BlockRepository, val userService: Us
     override fun block(blockerUsername: String, blockedUsername: String): Long {
         logService.info(LogAction.BLOCK_REQUEST, mapOf("blocker" to blockerUsername, "blocked" to blockedUsername))
 
+        if (blockerUsername == blockedUsername) {
+            throw SelfBlockingException(username = blockerUsername)
+        }
+
         val blocked = userService.getByUsername(blockedUsername)
         if (!blocked.isConfirmed) {
             throw UserNotFoundException()
         }
 
         val blocker = userService.getByUsername(blockerUsername)
+        if (isUserBlockedBy(blocked, blocker)) {
+            throw UserAlreadyBlockedException(blockerUsername = blockerUsername, blockedUsername = blockedUsername)
+        }
 
         return block(blocker, blocked)
     }
@@ -28,9 +37,6 @@ class BlockServiceImpl(val blockRepository: BlockRepository, val userService: Us
         logService.info(LogAction.UNBLOCK_REQUEST, mapOf("blocker" to blockerUsername, "blocked" to blockedUsername))
 
         val block = blockRepository.findByBlockerUsernameAndBlockedUsername(blockerUsername, blockedUsername) ?: throw BlockNotFoundException(blocker = blockerUsername, blocked = blockedUsername)
-        if (block.blocker.username != blockerUsername) {
-            throw BlockNotFoundException(blocker = blockerUsername, blocked = blockedUsername)
-        }
 
         delete(block)
         logService.info(LogAction.BLOCK_DELETED, mapOf("blocker" to blockerUsername, "blocked" to block.blocked.username))

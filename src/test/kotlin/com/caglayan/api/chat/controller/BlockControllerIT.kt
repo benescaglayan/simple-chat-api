@@ -88,6 +88,45 @@ class BlockControllerIT {
         }
 
         @Test
+        fun whenSelfBlocking_thenReturn422() {
+            val blockerUsername = "blocker"
+
+            val blocker = User("blocker", "John", "Doe", "blocker_test@block.com", passwordEncoder.encode("12345689"))
+            blocker.isConfirmed = true
+            userRepository.save(blocker)
+
+            val token = jwtUtil.generateJwt(userDetailsService.loadUserByUsername(blockerUsername))
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/$blockerUsername")
+                    .header("Authorization", "Bearer $token")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity)
+        }
+
+        @Test
+        fun givenAlreadyBlockedUser_thenReturn208() {
+            val blocker = User("blocker", "John", "Doe", "blocker_test@block.com", passwordEncoder.encode("12345689"))
+            blocker.isConfirmed = true
+            userRepository.save(blocker)
+
+            val blocked = User("blocked", "John", "Doe", "blocked_test@block.com", passwordEncoder.encode("12345689"))
+            blocked.isConfirmed = true
+            userRepository.save(blocked)
+
+            val token = jwtUtil.generateJwt(userDetailsService.loadUserByUsername(blocker.username))
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/${blocked.username}")
+                    .header("Authorization", "Bearer $token")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isCreated)
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/blocks/${blocked.username}")
+                    .header("Authorization", "Bearer $token")
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isAlreadyReported)
+        }
+
+        @Test
         fun givenValidTokenAndInvalidUsername_thenReturn404() {
             val blocker = User("blocker", "John", "Doe", "block_test@block.com", passwordEncoder.encode("12345689"))
             blocker.isConfirmed = true

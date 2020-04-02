@@ -16,7 +16,7 @@ class JwtUtil(val jwtConfig: JwtConfig, val logService: LogService) : Serializab
 
     fun generateJwt(userDetails: UserDetails): String {
         val claims: Map<String, Any> = HashMap()
-        val expiryDate = Date(Date().time + 1000 * jwtConfig.expiration.toLong())
+        val expiryDate = Date(Date().time + jwtConfig.expiration.toLong() * 60 * 1000 )
 
         return Jwts.builder()
                 .setClaims(claims)
