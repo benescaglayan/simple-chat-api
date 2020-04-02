@@ -1,6 +1,7 @@
 package com.caglayan.api.chat.entity
 
 import com.caglayan.api.chat.util.Crypto
+import com.caglayan.api.chat.util.Date
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.time.LocalDateTime
 import javax.persistence.*
@@ -35,13 +36,13 @@ data class Message(
     var isFromBlockedUser: Boolean = false
 
     @PrePersist
-    private fun prePersist() {
+    private fun onPrePersist() {
         text = Crypto.encrypt(text)
-        sentAt = LocalDateTime.now()
+        sentAt = Date.now()
     }
 
     @PostLoad
-    private fun postLoad() {
+    private fun onPostLoad() {
         text = Crypto.decrypt(text)
     }
 

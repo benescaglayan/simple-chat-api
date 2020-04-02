@@ -14,15 +14,12 @@ class BlockServiceImpl(val blockRepository: BlockRepository, val userService: Us
     override fun block(blockerUsername: String, blockedUsername: String): Long {
         logService.info(LogAction.BLOCK_REQUEST, mapOf("blocker" to blockerUsername, "blocked" to blockedUsername))
 
-        val blocker = userService.getByUsername(blockerUsername)
-        if (!blocker.isConfirmed) {
-            throw UserNotFoundException()
-        }
-
         val blocked = userService.getByUsername(blockedUsername)
         if (!blocked.isConfirmed) {
             throw UserNotFoundException()
         }
+
+        val blocker = userService.getByUsername(blockerUsername)
 
         return block(blocker, blocked)
     }

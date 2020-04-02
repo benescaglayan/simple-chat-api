@@ -1,7 +1,7 @@
 package com.caglayan.api.chat.service
 
 import com.caglayan.api.chat.entity.User
-import com.caglayan.api.chat.event.model.RegistrationCompletedEvent
+import com.caglayan.api.chat.event.model.VerificationRequestedEvent
 import com.caglayan.api.chat.exception.UserNotFoundException
 import com.caglayan.api.chat.model.enum.LogAction
 import com.caglayan.api.chat.repository.UserRepository
@@ -23,7 +23,7 @@ class UserServiceImpl(val userRepository: UserRepository, val eventBusService: E
 
         logService.info(LogAction.USER_CREATED, mapOf("id" to user.id, "username" to username, "firstName" to firstName, "lastName" to lastName, "email" to email))
 
-        eventBusService.send(RegistrationCompletedEvent(user))
+        eventBusService.send(VerificationRequestedEvent(user))
         return user.id
     }
 

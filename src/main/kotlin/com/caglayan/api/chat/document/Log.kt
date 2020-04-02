@@ -1,5 +1,6 @@
 package com.caglayan.api.chat.document
 
+import com.caglayan.api.chat.util.Date
 import com.caglayan.api.chat.util.Random
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
@@ -19,6 +20,6 @@ data class Log(
     @Id
     val id: String = Random.uuid()
 
-    val createdAt = LocalDateTime.now()
+    val createdAt = Date.now()
 
 }

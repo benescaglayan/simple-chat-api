@@ -9,6 +9,7 @@ import com.caglayan.api.chat.exception.InvalidVerificationTokenException
 import com.caglayan.api.chat.exception.UserAlreadyConfirmedException
 import com.caglayan.api.chat.model.enum.LogAction
 import com.caglayan.api.chat.repository.VerificationRepository
+import com.caglayan.api.chat.util.Date
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -31,7 +32,7 @@ class VerificationServiceImpl(val appConfig: AppConfig, val verificationReposito
 
         val verification = verificationRepository.findByToken(token) ?: throw InvalidVerificationTokenException(token = token)
 
-        if (verification.sentAt!!.isBefore(LocalDateTime.now().minusHours(appConfig.verificationThreshold.toLong()))) {
+        if (verification.sentAt!!.isBefore(Date.now().minusHours(appConfig.verificationThreshold.toLong()))) {
             throw InvalidVerificationTokenException(token = token)
         }
 

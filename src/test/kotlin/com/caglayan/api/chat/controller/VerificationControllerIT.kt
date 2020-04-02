@@ -9,7 +9,7 @@ import com.caglayan.api.chat.repository.UserRepository
 import com.caglayan.api.chat.repository.VerificationRepository
 import com.caglayan.api.chat.service.EventBusService
 import com.caglayan.api.chat.service.MailService
-import com.caglayan.api.chat.util.JwtUtil
+import com.caglayan.api.chat.util.Date
 import com.caglayan.api.chat.util.Random
 import com.google.gson.Gson
 import com.ninjasquad.springmockk.MockkBean
@@ -23,13 +23,17 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Primary
+import org.springframework.core.task.SyncTaskExecutor
 import org.springframework.http.MediaType
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
-import java.time.LocalDateTime
+
 
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -96,7 +100,7 @@ class VerificationControllerIT {
         fun givenExpiredToken_thenReturn400() {
             val user = userRepository.save(User("verify_test", "John", "Doe", "verify_test@verification.com", passwordEncoder.encode("12345689")))
             val verification = Verification(user)
-            verification.sentAt = LocalDateTime.now().minusHours(appConfig.verificationThreshold.toLong())
+            verification.sentAt = Date.now().minusHours(appConfig.verificationThreshold.toLong())
             verificationRepository.save(verification)
 
             mockMvc.perform(MockMvcRequestBuilders.get("/verifications/?token=${verification.token}")
@@ -160,6 +164,15 @@ class VerificationControllerIT {
 
             verify(timeout = 2000) { eventBus.send(capture(verificationRequestedEventSlot)) }
         }
+
+    }
+
+    @TestConfiguration
+    class TaskExecutorConfig {
+
+        @Bean
+        @Primary
+        fun taskExecutor() = SyncTaskExecutor()
 
     }
 

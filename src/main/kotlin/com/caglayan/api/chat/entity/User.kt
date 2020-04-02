@@ -1,5 +1,6 @@
 package com.caglayan.api.chat.entity
 
+import com.caglayan.api.chat.util.Date
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.time.LocalDateTime
 import javax.persistence.*
@@ -61,13 +62,13 @@ data class User(
     var blocks: List<Block> = arrayListOf()
 
     @PrePersist
-    private fun prePersist() {
-        createdAt = LocalDateTime.now()
+    private fun onPrePersist() {
+        createdAt = Date.now()
     }
 
     @PreUpdate
-    private fun preUpdate() {
-        updatedAt = LocalDateTime.now()
+    private fun onPreUpdate() {
+        updatedAt =  Date.now()
     }
 
 }
