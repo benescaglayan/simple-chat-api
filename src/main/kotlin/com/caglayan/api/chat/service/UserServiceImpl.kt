@@ -16,8 +16,6 @@ class UserServiceImpl(val userRepository: UserRepository, val eventBusService: E
 
     override fun getByUsername(username: String) = userRepository.findByUsername(username) ?: throw UserNotFoundException(username = username)
 
-    override fun getById(id: Long) = userRepository.findById(id).orElseThrow { UserNotFoundException() }
-
     override fun register(username: String, firstName: String, lastName: String, email: String, password: String): Long {
         val user = save(User(username, firstName, lastName, email, password))
 

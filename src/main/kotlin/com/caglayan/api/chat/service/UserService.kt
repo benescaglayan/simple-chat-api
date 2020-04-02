@@ -10,8 +10,6 @@ interface UserService {
 
     fun getByUsername(username: String): User
 
-    fun getById(id: Long): User
-
     fun register(username: String, firstName: String, lastName: String, email: String, password: String): Long
 
     fun save(user: User): User

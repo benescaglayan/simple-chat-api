@@ -3,10 +3,12 @@ package com.caglayan.api.chat.model.enum
 enum class LogAction(private val value: String) {
 
     BLOCK_CREATED("block.created"),
+    BLOCK_ALREADY_EXISTS("block.already.exists"),
     BLOCK_REQUEST("block.request"),
     BLOCK_NOT_FOUND("block.not.found"),
     UNBLOCK_REQUEST("unblock.request"),
     BLOCK_DELETED("block.deleted"),
+    SELF_BLOCK("self.block"),
 
     EMAIL_SENT("email.sent"),
 
